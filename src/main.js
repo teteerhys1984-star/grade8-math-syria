@@ -1,5 +1,13 @@
 import './style.css';
-import { catalog } from './data/content.js';
+import { catalog as demoCatalog } from './data/content.js';
+import lesson01 from './data/lessons/algebra/lesson-01.js';
+
+// Keep the existing catalog as the fallback for other sections while the
+// extracted first Algebra lesson is served from its source-specific data file.
+const catalog = {
+  ...demoCatalog,
+  algebra: { ...demoCatalog.algebra, lessons: [lesson01] }
+};
 
 const app = document.querySelector('#app');
 const iconArrow = '<span aria-hidden="true">←</span>';
@@ -22,14 +30,16 @@ function sectionPage(key) {
 
 const topicSymbols = { intro: '∑', concept: 'x + y', example: 'a = b', practice: '✓', quiz: '?', activity: '◇' };
 function topicContent(topic) {
+  const content = topic.content || topic;
   const extras = [];
-  if (topic.explanation) extras.push(`<p>${topic.explanation}</p>`);
-  if (topic.examples?.length) extras.push(`<div class="data-block"><strong>أمثلة</strong><span>${topic.examples.length} مثال</span></div>`);
-  if (topic.notes?.length) extras.push(`<div class="data-block"><strong>ملاحظات مهمة</strong><span>${topic.notes.length} ملاحظة</span></div>`);
-  if (topic.commonMistakes?.length) extras.push(`<div class="data-block"><strong>أخطاء شائعة</strong><span>${topic.commonMistakes.length} تنبيه</span></div>`);
-  if (topic.exercises?.length) extras.push(`<div class="data-block"><strong>تمارين</strong><span>${topic.exercises.length} تمرين</span></div>`);
-  if (topic.interactions?.length) extras.push(`<div class="data-block"><strong>أسئلة تفاعلية</strong><span>${topic.interactions.length} سؤال</span></div>`);
-  if (topic.assessment) extras.push(`<div class="data-block"><strong>اختبار الدرس</strong><span>${topic.assessment.questions.length} أسئلة</span></div>`);
+  if (content.explanation) extras.push(`<p>${content.explanation}</p>`);
+  if (content.examples?.length || content.examplesContinued?.length) extras.push(`<div class="data-block"><strong>أمثلة</strong><span>${(content.examples?.length || 0) + (content.examplesContinued?.length || 0)} مثال</span></div>`);
+  if (content.notes?.length) extras.push(`<div class="data-block"><strong>ملاحظات مهمة</strong><span>${content.notes.length} ملاحظة</span></div>`);
+  if (content.commonMistakes?.length) extras.push(`<div class="data-block"><strong>أخطاء شائعة</strong><span>${content.commonMistakes.length} تنبيه</span></div>`);
+  if (content.exercises?.length) extras.push(`<div class="data-block"><strong>تمارين</strong><span>${content.exercises.length} تمرين</span></div>`);
+  if (content.interactions?.length) extras.push(`<div class="data-block"><strong>أسئلة تفاعلية</strong><span>${content.interactions.length} سؤال</span></div>`);
+  if (content.assessment) extras.push(`<div class="data-block"><strong>اختبار الدرس</strong><span>${content.assessment.questions.length} أسئلة</span></div>`);
+  if (content.instructions?.length) extras.push(`<div class="data-block"><strong>تعليمات المصدر</strong><span>${content.instructions.length} تعليمات</span></div>`);
   return extras.join('') || '<div class="content-placeholder">هيكل المحتوى جاهز للإضافة لاحقًا</div>';
 }
 function lessonPage(key, index, topicIndex = 0) {
@@ -39,7 +49,7 @@ function lessonPage(key, index, topicIndex = 0) {
   const topic = lesson.topics[safeIndex];
   const previous = safeIndex > 0 ? safeIndex - 1 : null; const next = safeIndex < lesson.topics.length - 1 ? safeIndex + 1 : null;
   const topicUrl = n => `#/lesson/${key}/${index}/${n}`;
-  return layout(`<section class="lesson-shell"><a class="back-link" href="#/section/${key}">${iconArrow} العودة إلى دروس ${item.name}</a><div class="lesson-title"><div><div class="eyebrow"><span class="dot"></span> ${item.name} · ${lesson.title}</div><h1>${lesson.title}</h1></div><span class="lesson-count">${String(safeIndex + 1).padStart(2, '0')} / ${String(lesson.topics.length).padStart(2, '0')}</span></div><div class="progress-track" aria-label="التقدم في الدرس"><span style="width:${((safeIndex + 1) / lesson.topics.length) * 100}%"></span></div><div class="topic-tabs" role="tablist" aria-label="موضوعات الدرس">${lesson.topics.map((t, i) => `<a role="tab" aria-selected="${i === safeIndex}" class="topic-tab ${i === safeIndex ? 'selected' : ''}" href="${topicUrl(i)}"><span>${String(i + 1).padStart(2, '0')}</span>${t.label}</a>`).join('')}</div><article class="topic-panel"><div class="topic-kicker">الموضوع ${String(safeIndex + 1).padStart(2, '0')}</div><div class="topic-art ${topic.type}" aria-hidden="true">${topicSymbols[topic.type] || '•'}</div><h2>${topic.title}</h2><div class="topic-data">${topicContent(topic)}</div></article><div class="lesson-navigation"><a class="nav-button ${previous === null ? 'disabled' : ''}" ${previous === null ? 'aria-disabled="true"' : `href="${topicUrl(previous)}"`}>${iconArrow} <span>السابق</span></a><span class="position-label">الموضوع ${safeIndex + 1} من ${lesson.topics.length}</span><a class="nav-button primary ${next === null ? 'disabled' : ''}" ${next === null ? 'aria-disabled="true"' : `href="${topicUrl(next)}"`}><span>التالي</span> <span aria-hidden="true">→</span></a></div></section>`, key);
+  return layout(`<section class="lesson-shell"><a class="back-link" href="#/section/${key}">${iconArrow} العودة إلى دروس ${item.name}</a><div class="lesson-title"><div><div class="eyebrow"><span class="dot"></span> ${item.name} · ${lesson.title}</div><h1>${lesson.title}</h1></div><span class="lesson-count">${String(safeIndex + 1).padStart(2, '0')} / ${String(lesson.topics.length).padStart(2, '0')}</span></div><div class="progress-track" aria-label="التقدم في الدرس"><span style="width:${((safeIndex + 1) / lesson.topics.length) * 100}%"></span></div><div class="topic-tabs" role="tablist" aria-label="موضوعات الدرس">${lesson.topics.map((t, i) => `<a role="tab" aria-selected="${i === safeIndex}" class="topic-tab ${i === safeIndex ? 'selected' : ''}" href="${topicUrl(i)}"><span>${String(i + 1).padStart(2, '0')}</span>${t.label || t.title}</a>`).join('')}</div><article class="topic-panel"><div class="topic-kicker">الموضوع ${String(safeIndex + 1).padStart(2, '0')} · الصفحة${topic.sourcePages?.length === 1 ? '' : 'ات'} ${topic.sourcePages?.join('، ') || 'غير محددة'}</div><div class="topic-art ${topic.type || topic.kind || ''}" aria-hidden="true">${topicSymbols[topic.type || topic.kind] || '•'}</div><h2>${topic.title || topic.heading}</h2><div class="topic-data">${topicContent(topic)}</div></article><div class="lesson-navigation"><a class="nav-button ${previous === null ? 'disabled' : ''}" ${previous === null ? 'aria-disabled="true"' : `href="${topicUrl(previous)}"`}>${iconArrow} <span>السابق</span></a><span class="position-label">الموضوع ${safeIndex + 1} من ${lesson.topics.length}</span><a class="nav-button primary ${next === null ? 'disabled' : ''}" ${next === null ? 'aria-disabled="true"' : `href="${topicUrl(next)}"`}><span>التالي</span> <span aria-hidden="true">→</span></a></div></section>`, key);
 }
 
 function render() {
